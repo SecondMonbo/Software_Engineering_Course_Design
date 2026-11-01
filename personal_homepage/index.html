@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小组主页 · 软件工程课程设计</title>
+<style>
+  /* ========== 基础与变量 ========== */
+  :root {
+    --bg: #f7f6f2;          /* 米白底，大气干净 */
+    --ink: #1c1e26;         /* 主文字墨色 */
+    --ink-soft: #5b5f6b;    /* 次要文字 */
+    --accent: #2b4acb;      /* 深蓝点缀 */
+    --line: #e4e2da;        /* 分隔线 */
+    --card: #ffffff;
+    --radius: 18px;
+    --shadow: 0 18px 45px -22px rgba(28, 30, 38, .25);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+
+  /* ========== 顶部导航 ========== */
+  nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 10;
+    backdrop-filter: blur(12px);
+    background: rgba(247, 246, 242, .82);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-weight: 700; letter-spacing: .12em; font-size: 15px; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--ink-soft); }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* ========== 首屏 ========== */
+  header {
+    min-height: 88vh;
+    display: flex; align-items: center;
+    border-bottom: 1px solid var(--line);
+    position: relative; overflow: hidden;
+  }
+  header::after { /* 背景装饰圆 */
+    content: ""; position: absolute; right: -180px; top: -180px;
+    width: 480px; height: 480px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(43, 74, 203, .10), transparent 65%);
+  }
+  .eyebrow {
+    font-size: 13px; letter-spacing: .35em; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 22px; font-weight: 600;
+  }
+  h1 { font-size: clamp(40px, 6vw, 64px); line-height: 1.15; letter-spacing: .02em; font-weight: 800; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .hero-desc { margin-top: 22px; max-width: 560px; color: var(--ink-soft); font-size: 16px; }
+  .hero-actions { margin-top: 38px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 30px; border-radius: 999px; font-size: 15px; font-weight: 600;
+    transition: transform .25s, box-shadow .25s, background .25s;
+    cursor: pointer; border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow); background: var(--accent); }
+  .btn-ghost { border-color: var(--ink); color: var(--ink); background: transparent; }
+  .btn-ghost:hover { transform: translateY(-2px); background: var(--ink); color: #fff; }
+
+  /* ========== 区块通用 ========== */
+  section { padding: 110px 0; }
+  .sec-head { margin-bottom: 56px; }
+  .sec-head h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: .02em; }
+  .sec-head p { margin-top: 10px; color: var(--ink-soft); }
+  .sec-num { font-size: 13px; letter-spacing: .3em; color: var(--accent); font-weight: 600; display: block; margin-bottom: 12px; }
+
+  /* ========== 成员卡片 ========== */
+  .members { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px; }
+  .member {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 40px 36px; transition: transform .3s, box-shadow .3s;
+  }
+  .member:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+  .avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700; margin-bottom: 24px;
+  }
+  .member h3 { font-size: 24px; font-weight: 700; }
+  .member .role { font-size: 13px; color: var(--accent); letter-spacing: .15em; margin: 6px 0 20px; font-weight: 600; }
+  .member dl { font-size: 14.5px; }
+  .member dl div { display: flex; padding: 10px 0; border-top: 1px solid var(--line); }
+  .member dt { width: 88px; color: var(--ink-soft); flex-shrink: 0; }
+  .member dd { font-variant-numeric: tabular-nums; }
+
+  /* ========== 项目卡片 ========== */
+  .projects { display: grid; gap: 24px; }
+  .project {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 36px 40px; display: grid; grid-template-columns: 72px 1fr auto; gap: 28px;
+    align-items: center; transition: transform .3s, box-shadow .3s, border-color .3s;
+  }
+  .project:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--accent); }
+  .proj-icon {
+    width: 72px; height: 72px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 800; color: #fff;
+  }
+  .p-icon-1 { background: linear-gradient(135deg, #2b4acb, #6b8afd); }
+  .p-icon-2 { background: linear-gradient(135deg, #0f8a5f, #4cc79a); }
+  .p-icon-3 { background: linear-gradient(135deg, #c2492b, #f08a5c); }
+  .project h3 { font-size: 21px; font-weight: 700; }
+  .project .tags { margin: 8px 0 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 12px; padding: 3px 12px; border-radius: 999px;
+    background: var(--bg); border: 1px solid var(--line); color: var(--ink-soft);
+  }
+  .project p { font-size: 14.5px; color: var(--ink-soft); max-width: 560px; }
+  .proj-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+  .proj-actions .btn { justify-content: center; white-space: nowrap; padding: 11px 26px; font-size: 14px; }
+  .proj-note { grid-column: 1 / -1; font-size: 13px; color: var(--ink-soft); border-top: 1px dashed var(--line); padding-top: 14px; }
+  .proj-note code {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+    padding: 2px 8px; font-size: 12.5px; font-family: Consolas, monospace;
+  }
+
+  /* ========== 页脚 ========== */
+  footer { border-top: 1px solid var(--line); padding: 48px 0; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--ink-soft); font-size: 13.5px; }
+
+  /* ========== 入场动画 ========== */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.show { opacity: 1; transform: none; }
+
+  /* ========== 响应式 ========== */
+  @media (max-width: 760px) {
+    .project { grid-template-columns: 1fr; }
+    .proj-actions { flex-direction: row; flex-wrap: wrap; }
+    .nav-links { display: none; }
+    section { padding: 72px 0; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top">SE<span>·</span>GROUP</a>
+    <div class="nav-links">
+      <a href="#members">小组成员</a>
+      <a href="#projects">课程项目</a>
+    </div>
+  </div>
+</nav>
+
+<header id="top">
+  <div class="wrap">
+    <p class="eyebrow">Software Engineering Course Design</p>
+    <h1>软件工程<br />课程设计 <em>小组主页</em></h1>
+    <p class="hero-desc">
+      这里汇聚了我们小组在《现代软件工程》课程中的三项实践成果 ——
+      代码量统计工具、四则运算出题工作台与掷骰子小游戏，均可从本页直接进入并运行。
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#projects">浏览项目 →</a>
+      <a class="btn btn-ghost" href="#members">认识我们</a>
+    </div>
+  </div>
+</header>
+
+<!-- ========== 小组成员 ========== -->
+<section id="members">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">01 · MEMBERS</span>
+      <h2>小组成员</h2>
+      <p>两名来自计算机科学与技术专业的成员，共同完成本课程的全部设计任务。</p>
+    </div>
+    <div class="members">
+      <article class="member reveal">
+        <div class="avatar">翟</div>
+        <h3>翟尚泽</h3>
+        <p class="role">TEAM MEMBER</p>
+        <dl>
+          <div><dt>学号</dt><dd>2024141460578</dd></div>
+          <div><dt>专业</dt><dd>计算机科学与技术</dd></div>
+        </dl>
+      </article>
+      <article class="member reveal">
+        <div class="avatar">邱</div>
+        <h3>邱禾勋</h3>
+        <p class="role">TEAM MEMBER</p>
+        <dl>
+          <div><dt>学号</dt><dd>2024141460530</dd></div>
+          <div><dt>专业</dt><dd>计算机科学与技术</dd></div>
+        </dl>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 课程项目 ========== -->
+<section id="projects" style="background:#fff; border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">02 · PROJECTS</span>
+      <h2>课程项目</h2>
+      <p>点击卡片右侧按钮，即可打开并运行对应程序。</p>
+    </div>
+    <div class="projects">
+
+      <!-- 项目一：代码量统计 -->
+      <article class="project reveal">
+        <div class="proj-icon p-icon-1">#</div>
+        <div>
+          <h3>代码量统计工具</h3>
+          <div class="tags"><span class="tag">Python</span><span class="tag">命令行 + 图形界面</span><span class="tag">统计报表导出</span></div>
+          <p>输入本地文件夹或 GitHub 仓库链接，递归统计 35+ 种语言的代码行 / 注释行 / 空行，并支持函数级统计与 JSON、TXT、DOCX 结果导出。</p>
+        </div>
+        <div class="proj-actions">
+          <a class="btn btn-primary" href="../Software_Engineering_Course_Design/code_count/run_gui.bat" download>获取启动器</a>
+          <button class="btn btn-ghost" id="copy-cmd" type="button">复制运行命令</button>
+        </div>
+        <p class="proj-note">
+          该程序为桌面应用（需本机安装 Python 3）：点击“获取启动器”下载 <code>run_gui.bat</code> 后，
+          将其放入 <code>code_count</code> 文件夹双击即可打开图形界面；或在命令行中运行 <code>python code_counter_ui.py</code>。
+        </p>
+      </article>
+
+      <!-- 项目二：四则运算出题 -->
+      <article class="project reveal">
+        <div class="proj-icon p-icon-2">±</div>
+        <div>
+          <h3>四则运算出题工作台</h3>
+          <div class="tags"><span class="tag">HTML / JS</span><span class="tag">单文件零依赖</span><span class="tag">种子可复现</span></div>
+          <p>面向小学二年级的出题工具：口算填空、脱式混合运算、求未知数三种题型，参数面板可调题量、数值上限与括号，同参数同种子可复现同一套题。</p>
+        </div>
+        <div class="proj-actions">
+          <a class="btn btn-primary" href="../Software_Engineering_Course_Design/four_fundamental_oprations/index.html" target="_blank">打开运行 →</a>
+        </div>
+      </article>
+
+      <!-- 项目三：掷骰子游戏 -->
+      <article class="project reveal">
+        <div class="proj-icon p-icon-3">⚄</div>
+        <div>
+          <h3>掷出幸运 7 · 骰子游戏</h3>
+          <div class="tags"><span class="tag">HTML / CSS / JS</span><span class="tag">动画交互</span><span class="tag">战绩统计</span></div>
+          <p>同时掷出两颗骰子，点数之和正好等于 7 即为获胜。页面实时统计已掷次数、命中次数与命中率，配有流畅的掷骰动画。</p>
+        </div>
+        <div class="proj-actions">
+          <a class="btn btn-primary" href="../Software_Engineering_Course_Design/throw_dice/index.html" target="_blank">打开运行 →</a>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 软件工程课程设计小组 · 翟尚泽 &amp; 邱禾勋</span>
+    <span>计算机科学与技术</span>
+  </div>
+</footer>
+
+<script>
+  // 复制代码量统计工具的运行命令
+  document.getElementById('copy-cmd').addEventListener('click', function () {
+    var cmd = 'python code_counter_ui.py';
+    var btn = this;
+    navigator.clipboard.writeText(cmd).then(function () {
+      btn.textContent = '已复制 ✓';
+      setTimeout(function () { btn.textContent = '复制运行命令'; }, 1600);
+    });
+  });
+
+  // 滚动进入视口时的淡入动画
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('show');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
+</script>
+
+</body>
+</html>
