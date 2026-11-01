@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f4ef" />
+    <title>掷出幸运 7 · 骰子小游戏</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="掷出幸运 7 首页">
+          <span class="brand-mark" aria-hidden="true">7</span>
+          <span>ROLL<span class="brand-dot">.</span>SEVEN</span>
+        </a>
+        <span class="topbar-note"><span class="status-dot"></span> 准备就绪</span>
+      </header>
+
+      <section class="game-card" aria-labelledby="game-title">
+        <div class="intro">
+          <p class="eyebrow"><span></span> TWO DICE · ONE LUCKY NUMBER</p>
+          <h1 id="game-title">掷出幸运 <span>7</span></h1>
+          <p class="subtitle">同时掷出两颗骰子，看看点数之和是不是 7。</p>
+        </div>
+
+        <div class="dice-table" aria-label="骰子区域">
+          <div class="dice-stage">
+            <div class="die" id="die-one" data-value="1" role="img" aria-label="骰子一：1 点">
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+            </div>
+            <span class="dice-plus" aria-hidden="true">+</span>
+            <div class="die" id="die-two" data-value="1" role="img" aria-label="骰子二：1 点">
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+            </div>
+          </div>
+          <div class="result" aria-live="polite" aria-atomic="true">
+            <span class="result-label">本次点数</span>
+            <span class="result-total" id="result-total">—</span>
+            <span class="result-message" id="result-message">准备好试试手气了吗？</span>
+          </div>
+          <button class="roll-button" id="roll-button" type="button">
+            <span class="button-icon" aria-hidden="true">↻</span>
+            <span>掷出骰子</span>
+            <span class="button-arrow" aria-hidden="true">→</span>
+          </button>
+          <p class="hint">两颗骰子点数相加，正好等于 7 即为获胜</p>
+        </div>
+
+        <div class="stats" aria-label="游戏统计">
+          <div class="stat">
+            <span class="stat-icon rounds-icon" aria-hidden="true">↻</span>
+            <span class="stat-copy"><span class="stat-label">已掷次数</span><strong id="round-count">0</strong></span>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat">
+            <span class="stat-icon wins-icon" aria-hidden="true">✦</span>
+            <span class="stat-copy"><span class="stat-label">幸运 7</span><strong id="win-count">0</strong></span>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat">
+            <span class="stat-icon rate-icon" aria-hidden="true">%</span>
+            <span class="stat-copy"><span class="stat-label">命中率</span><strong id="win-rate">0%</strong></span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>好运不靠猜，快乐掷出来。</span>
+        <span class="footer-dice" aria-hidden="true">⚄</span>
+        <a class="diagram-link" href="./class-diagram.md">查看 UML 类图（Markdown） <span aria-hidden="true">↗</span></a>
+        <a class="diagram-link" href="./sequence-diagram.md">查看 UML 顺序图（Markdown） <span aria-hidden="true">↗</span></a>
+      </footer>
+    </main>
+  </body>
+</html>

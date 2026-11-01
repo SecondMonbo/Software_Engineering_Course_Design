@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>四则运算出题工作台 · 二年级</title>
+<meta name="description" content="小学二年级四则运算出题工作台：100 以内加减 + 表内乘除，可复现种子、同套去重。打印 / 自测 / 批量为预留接口。">
+<style>
+/* 出题工作台样式 v0.1.0 —— 无外部依赖（不使用 CDN 字体 / 框架） */
+
+:root {
+  --bg: #f4f6fa;
+  --card: #ffffff;
+  --ink: #1f2733;
+  --ink-2: #344256;
+  --muted: #6b7787;
+  --line: #e3e8ef;
+  --line-soft: #f1f4f9;
+  --brand: #2f6df6;
+  --brand-ink: #1b4fd1;
+  --warn: #a2691a;
+  --warn-bg: #fdf6e4;
+  --warn-line: #f0dfae;
+  --ok: #1e874b;
+  --ok-bg: #eef8f2;
+  --ok-line: #bfe4cd;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 22px 22px 104px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ------------------------------- 顶栏 ------------------------------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+
+.brand__mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #2f6df6, #7aa5ff);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(47, 109, 246, .28);
+}
+
+.brand h1 { margin: 0; font-size: 19px; letter-spacing: .01em; }
+
+.brand__sub { margin: 1px 0 0; font-size: 12.5px; color: var(--muted); }
+
+.topbar__meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.tag {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tag--warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn); }
+
+/* ------------------------------- 布局 ------------------------------- */
+.workspace {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+}
+
+.card__title {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+  letter-spacing: .04em;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  position: sticky;
+  top: 16px;
+}
+
+/* ------------------------------- 表单 ------------------------------- */
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; border: 0; padding: 0; margin: 0; }
+
+.field__label { font-weight: 600; color: var(--ink-2); font-size: 13px; }
+
+.field__label em { font-style: normal; font-weight: 400; font-size: 12px; color: var(--muted); }
+
+.field input[type="number"],
+.field select {
+  width: 100%;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13.5px;
+  color: inherit;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.field input[type="number"]:focus,
+.field select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(47, 109, 246, .15);
+}
+
+.row { display: flex; gap: 8px; }
+.row input[type="number"] { flex: 1 1 auto; min-width: 0; }
+
+.checks { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+  background: #fbfcfe;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .15s, background .15s;
+}
+
+.check:hover { border-color: #c9d4e4; }
+
+.check input { margin: 0; accent-color: var(--brand); }
+
+.check--inline { padding: 4px 9px; font-size: 12.5px; }
+
+/* ------------------------------- 按钮 ------------------------------- */
+.btn {
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .05s;
+}
+
+.btn:hover { background: #f8fafd; border-color: #c9d4e4; }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid rgba(47, 109, 246, .4); outline-offset: 1px; }
+
+.btn--primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn--primary:hover { background: var(--brand-ink); border-color: var(--brand-ink); }
+
+.btn--ghost { padding: 7px 11px; white-space: nowrap; }
+
+.btn--module {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  text-align: left;
+}
+
+.btn--module small { color: var(--muted); font-size: 11.5px; }
+
+.badge {
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  color: var(--warn);
+}
+
+.badge--ready { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok); }
+
+.hint { margin: 0; font-size: 12px; line-height: 1.65; color: var(--muted); }
+
+/* ------------------------------- 舞台 ------------------------------- */
+.stage { display: flex; flex-direction: column; gap: 12px; }
+
+.stage__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stage__head .card__title { margin: 0; }
+
+.stage__tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.field--inline { flex-direction: row; align-items: center; gap: 8px; }
+.field--inline select { width: auto; padding: 5px 8px; font-size: 12.5px; }
+.field--inline .field__label { font-weight: 400; font-size: 12.5px; color: var(--muted); }
+
+.metrics { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.metric {
+  font-size: 12px;
+  color: var(--muted);
+  background: #fbfcfe;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+
+.metric b { color: var(--ink-2); font-weight: 600; }
+.metric--ok { background: var(--ok-bg); border-color: var(--ok-line); color: #176e3d; }
+.metric--ok b { color: #145f34; }
+.metric--bad { background: #fdecec; border-color: #f3c2c2; color: #9b2c2c; }
+.metric--bad b { color: #8f2222; }
+
+.warnings {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  padding: 8px 11px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 9px;
+}
+
+/* ------------------------------ 试卷纸 ------------------------------ */
+.paper {
+  background: #fff;
+  border: 1px dashed #d7dfea;
+  border-radius: 12px;
+  padding: 18px 18px 14px;
+  min-height: 260px;
+}
+
+.paper__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+  flex-wrap: wrap;
+}
+
+.paper__title { font-size: 14.5px; font-weight: 700; color: var(--ink-2); }
+.paper__meta { font-size: 12.5px; color: var(--muted); }
+
+.paper__grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  gap: 6px 20px;
+}
+
+.q {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 2px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 16.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.q__no { flex: 0 0 auto; min-width: 20px; font-size: 12px; color: #a3aebd; text-align: right; }
+.q__body { flex: 1 1 auto; overflow: hidden; }
+
+.q__ans {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+
+.q .op, .q .eq { margin: 0 .26em; color: #4a5768; }
+.q .paren { color: #97a3b4; }
+.q .num { color: var(--ink); }
+
+.blank {
+  display: inline-block;
+  width: 46px;
+  height: 20px;
+  border-bottom: 2px solid #b9c6d8;
+  vertical-align: -4px;
+}
+
+/* ------------------------------ 底部操作条 ------------------------------ */
+.actionbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 22px;
+  background: rgba(255, 255, 255, .95);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+}
+
+.actionbar__hint { font-size: 12px; color: var(--muted); }
+.actionbar__buttons { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ------------------------------- 提示条 ------------------------------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 88px;
+  z-index: 50;
+  max-width: min(720px, 92vw);
+  padding: 10px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #fff;
+  background: #1f2733;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, .22);
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+
+.toast--show { opacity: 1; transform: translate(-50%, 0); }
+.toast--warn { background: #8a5a12; }
+.toast--error { background: #9b2c2c; }
+.toast--ok { background: #17603a; }
+
+/* ------------------------------ 接口说明 ------------------------------ */
+.contracts { font-size: 12.5px; color: var(--muted); }
+.contracts summary { cursor: pointer; color: var(--ink-2); font-weight: 600; }
+.contracts pre {
+  margin: 10px 0 0;
+  padding: 11px 13px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Cascadia Mono", monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #334155;
+  background: #f7f9fc;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+/* ------------------------------- 响应式 ------------------------------- */
+@media (max-width: 940px) {
+  .workspace { grid-template-columns: 1fr; }
+  .panel { position: static; }
+  .paper__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+  .shell { padding: 16px 14px 132px; }
+  .paper__grid { grid-template-columns: 1fr; }
+  .actionbar { padding: 10px 14px; }
+}
+
+/* 临时规则：正式 A4 分页与答案页属于「打印试卷」预留模块，此处只保证浏览器打印时
+   不把工具栏打进去。实现打印模块后可替换本段。 */
+@media print {
+  .topbar__meta, .panel, .actionbar, .stage__tools, .hint, .toast, .contracts { display: none !important; }
+  body { background: #fff; }
+  .shell { padding: 0; max-width: none; }
+  .card { border: 0; box-shadow: none; padding: 0; }
+  .workspace { display: block; }
+  .paper { border: 0; padding: 0; min-height: 0; }
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand__mark">÷×</span>
+      <div>
+        <h1>四则运算出题工作台</h1>
+        <p class="brand__sub">小学二年级 · 100 以内加减 + 表内乘除 · 结果与中间结果均非负</p>
+      </div>
+    </div>
+    <div class="topbar__meta">
+      <span class="tag tag--warn">打印 / 自测 / 批量：仅预留接口</span>
+      <span class="tag" id="engine-version">引擎 —</span>
+    </div>
+  </header>
+
+  <main class="workspace">
+
+    <aside class="panel card">
+      <h2 class="card__title">出题参数</h2>
+
+      <fieldset class="field" id="types">
+        <legend class="field__label">题型</legend>
+        <div class="checks">
+          <label class="check"><input type="checkbox" value="arith" checked><span>口算填空</span></label>
+          <label class="check"><input type="checkbox" value="mixed" checked><span>脱式混合</span></label>
+          <label class="check"><input type="checkbox" value="unknown" checked><span>求未知数</span></label>
+        </div>
+      </fieldset>
+
+      <label class="field">
+        <span class="field__label">每套题量</span>
+        <input id="count" type="number" min="1" max="100" step="1" value="20">
+      </label>
+
+      <label class="field">
+        <span class="field__label">加减法上限</span>
+        <select id="maxValue">
+          <option value="20">20 以内</option>
+          <option value="50">50 以内</option>
+          <option value="100" selected>100 以内</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">运算数个数 <em>（脱式混合）</em></span>
+        <select id="operandCount">
+          <option value="random" selected>随机 2～3 个</option>
+          <option value="2">固定 2 个</option>
+          <option value="3">固定 3 个</option>
+        </select>
+      </label>
+
+      <div class="checks">
+        <label class="check"><input id="allowParens" type="checkbox" checked><span>允许括号</span></label>
+        <label class="check"><input id="unique" type="checkbox" checked><span>同套不重复</span></label>
+      </div>
+
+      <div class="field">
+        <span class="field__label">随机种子</span>
+        <div class="row">
+          <input id="seed" type="number" min="1" max="999999999" step="1" value="20240501">
+          <button id="reseed" class="btn btn--ghost" type="button">换一个</button>
+        </div>
+      </div>
+
+      <button id="regenerate" class="btn btn--primary" type="button">重新生成（Ctrl + Enter）</button>
+
+      <p class="hint">同一组参数 + 同一种子 = 完全相同的一套题，可复现、可存档。</p>
+
+      <details class="contracts">
+        <summary>预留接口说明</summary>
+        <pre>// 打印 / 自测 / 批量 只预留接口，均未实现
+FQ.registerModule("print", { run(sheet) { /* A4 版式 + 答案页 */ } });
+FQ.registerModule("quiz",  { run(sheet) { /* 作答 / 判分 / 计时 */ } });
+FQ.registerModule("batch", { run(sheet) { /* N 套 + 打包导出 */ } });
+
+// sheet = { seed, params, questions, stats, warnings }
+// questions[i] = { index, type, tokens, slot, result,
+//                  answer, operandCount, key, display, solution }
+
+FQ.getSheet();                    // 取当前题目
+FQ.setParams({ maxValue: 20 });   // 改参数并重新出题
+FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
+      </details>
+    </aside>
+
+    <section class="stage card">
+      <div class="stage__head">
+        <h2 class="card__title">题目预览</h2>
+        <div class="stage__tools">
+          <label class="check check--inline"><input id="showAnswers" type="checkbox"><span>显示答案</span></label>
+          <label class="field field--inline">
+            <span class="field__label">预览列数</span>
+            <select id="cols">
+              <option value="2">2 列</option>
+              <option value="3" selected>3 列</option>
+              <option value="4">4 列</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="metrics" id="metrics"></div>
+
+      <div class="paper" id="paper"></div>
+
+      <p class="hint">
+        当前为屏幕预览：A4 分页、答案独页、字号与列数的打印版式属于「打印试卷」预留模块，尚未实现。
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<footer class="actionbar">
+  <div class="actionbar__hint" id="actionbar-hint">加载中…</div>
+  <div class="actionbar__buttons" id="actionbar-buttons"></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript>
+  <p style="padding:16px">本页需要启用 JavaScript 才能出题。</p>
+</noscript>
+
+<script>
+/*!
+ * 四则运算出题引擎 v0.1.0
+ * ---------------------------------------------------------------------------
+ * 纯逻辑模块：不依赖 DOM，可在浏览器（挂 window.FQ_ENGINE）与 Node（module.exports）
+ * 中同时使用，便于用脚本对出题结果做约束验证。
+ *
+ * 硬约束（由构造式出题保证，并由 validateQuestion 二次校验）：
+ *   1. 结果与所有中间结果均非负；
+ *   2. 加减法结果不超过 maxValue；
+ *   3. 乘除限表内：裸数字因数 ≤ maxFactor，除法必须整除；
+ *      两个裸数字相除时被除数不超过 maxFactor²（表内除法）；
+ *   4. 括号内整体参与乘除时不受“表内”限制，但仍受 maxValue 限制；
+ *   5. 操作数均为 ≥1 的整数。
+ *
+ * 数据结构：
+ *   AST  —— 用于约束校验（能区分“括号内整体”与“裸数字”）
+ *   tokens —— 扁平字符串数组，用于展示与独立复算，ASCII 运算符：+ - * /
+ *             空位统一记为 '□'，等号记为 '='
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.FQ_ENGINE = factory();
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  var VERSION = '0.1.0';
+  var OP_KEYS = ['+', '-', '*', '/'];
+  var SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+  var BLANK = '□';
+
+  var DEFAULT_PARAMS = {
+    types: ['arith', 'mixed', 'unknown'], // arith 口算填空 / mixed 脱式混合 / unknown 求未知数
+    count: 20,          // 每套题量
+    maxValue: 100,      // 加减法结果上限
+    maxFactor: 9,       // 表内乘除因数上限
+    operandCount: 'random', // 2 | 3 | 'random'，仅作用于 mixed
+    allowParens: true,
+    unique: true,
+    seed: 20240501
+  };
+
+  // -------------------------------------------------------------------------
+  // 基础工具
+  // -------------------------------------------------------------------------
+  function symbolOf(op) { return SYMBOLS[op] || op; }
+
+  function toInt(value, fallback) {
+    var n = Number(value);
+    return Number.isFinite(n) ? Math.round(n) : fallback;
+  }
+
+  function clamp(n, low, high) { return Math.min(high, Math.max(low, n)); }
+
+  /** mulberry32：同一种子必然产出同一串随机数 */
+  function createRNG(seed) {
+    var s = (toInt(seed, DEFAULT_PARAMS.seed) >>> 0) || 0x9e3779b9;
+    return function next() {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function rint(rng, low, high) {
+    if (high < low) return low;
+    return low + Math.floor(rng() * (high - low + 1));
+  }
+
+  function pick(rng, list) { return list[Math.floor(rng() * list.length)]; }
+
+  function chance(rng, p) { return rng() < p; }
+
+  // -------------------------------------------------------------------------
+  // AST 构造与取值
+  // -------------------------------------------------------------------------
+  function numNode(v) { return { t: 'num', v: v }; }
+  function opNode(op, l, r) { return { t: 'op', op: op, l: l, r: r }; }
+  function grpNode(e) { return { t: 'group', e: e }; } // 显式括号
+
+  /** 递归求值；任何违反硬约束的情况返回 null（供校验用） */
+  function evalNode(node, p, problems) {
+    if (!node || typeof node !== 'object') {
+      problems.push('节点结构异常');
+      return null;
+    }
+    if (node.t === 'num') {
+      if (!Number.isInteger(node.v)) { problems.push('操作数不是整数：' + node.v); return null; }
+      if (node.v < 1) { problems.push('操作数小于 1：' + node.v); return null; }
+      if (node.v > p.maxValue) { problems.push('操作数超过上限 ' + p.maxValue + '：' + node.v); return null; }
+      return node.v;
+    }
+    if (node.t === 'group') return evalNode(node.e, p, problems);
+    if (node.t === 'op') {
+      var lv = evalNode(node.l, p, problems);
+      var rv = evalNode(node.r, p, problems);
+      if (lv == null || rv == null) return null;
+
+      // 只有“裸数字”才受表内限制；括号内整体算作一个非裸操作数
+      var plainL = node.l.t === 'num';
+      var plainR = node.r.t === 'num';
+      var val = null;
+
+      if (node.op === '+') {
+        val = lv + rv;
+      } else if (node.op === '-') {
+        val = lv - rv;
+        if (val < 0) { problems.push('出现负数中间结果：' + lv + ' - ' + rv); return null; }
+      } else if (node.op === '*') {
+        if (plainL && lv > p.maxFactor) { problems.push('乘法因数超出表内范围：' + lv); }
+        if (plainR && rv > p.maxFactor) { problems.push('乘法因数超出表内范围：' + rv); }
+        val = lv * rv;
+      } else if (node.op === '/') {
+        if (rv === 0) { problems.push('除数为 0'); return null; }
+        if (lv % rv !== 0) { problems.push('除法不能整除：' + lv + ' ÷ ' + rv); }
+        if (plainR && rv > p.maxFactor) { problems.push('除数超出表内范围：' + rv); }
+        if (plainL && plainR && lv > p.maxFactor * p.maxFactor) { problems.push('被除数超出表内除法范围：' + lv); }
+        val = lv / rv;
+      } else {
+        problems.push('未知运算符：' + node.op);
+        return null;
+      }
+
+      if (!Number.isInteger(val)) { problems.push('中间结果不是整数：' + val); return null; }
+      if (val > p.maxValue) { problems.push('中间结果超过上限 ' + p.maxValue + '：' + val); return null; }
+      return val;
+    }
+    problems.push('未知节点类型：' + node.t);
+    return null;
+  }
+
+  // -------------------------------------------------------------------------
+  // 取数工具：保证“乘除表内 + 不超上限”
+  // -------------------------------------------------------------------------
+  /** 取一对表内因数，使 a×b ≤ maxProduct；无解返回 null */
+  function mulPair(rng, p, maxProduct) {
+    var cap = Math.min(p.maxFactor, Math.max(2, maxProduct));
+    var options = [];
+    for (var a = 2; a <= cap; a++) {
+      var bMax = Math.min(cap, Math.floor(maxProduct / a));
+      if (bMax >= 2) options.push({ a: a, bMax: bMax });
+    }
+    if (!options.length) return null;
+    var o = pick(rng, options);
+    return { a: o.a, b: rint(rng, 2, o.bMax) };
+  }
+
+  /** 取一组整除算式 a ÷ b = q，使 a ≤ maxDividend、q ≥ minQ；无解返回 null */
+  function divPair(rng, p, maxDividend, minQ) {
+    var minQuotient = Math.max(1, minQ || 1);
+    var options = [];
+    var bCap = Math.min(p.maxFactor, maxDividend);
+    for (var b = 2; b <= bCap; b++) {
+      var qMax = Math.min(p.maxFactor, Math.floor(maxDividend / b));
+      if (qMax >= minQuotient) options.push({ b: b, qMax: qMax });
+    }
+    if (!options.length) return null;
+    var o = pick(rng, options);
+    var q = rint(rng, minQuotient, o.qMax);
+    return { a: o.b * q, b: o.b, q: q };
+  }
+
+  // -------------------------------------------------------------------------
+  // 两数模板（口算填空 / 求未知数 / 脱式两数）
+  // -------------------------------------------------------------------------
+  var ARITH_BUILDERS = {
+    '+': function (rng, p) {
+      var a = rint(rng, 1, p.maxValue - 1);
+      var b = rint(rng, 1, p.maxValue - a);
+      return opNode('+', numNode(a), numNode(b));
+    },
+    '-': function (rng, p) {
+      var a = rint(rng, 2, p.maxValue);
+      var b = rint(rng, 1, a - 1);
+      return opNode('-', numNode(a), numNode(b));
+    },
+    '*': function (rng, p) {
+      var m = mulPair(rng, p, p.maxValue);
+      return m ? opNode('*', numNode(m.a), numNode(m.b)) : null;
+    },
+    '/': function (rng, p) {
+      var d = divPair(rng, p, p.maxValue, 1);
+      return d ? opNode('/', numNode(d.a), numNode(d.b)) : null;
+    }
+  };
+
+  // 加减乘除出现概率（+ - 各 3 份，× ÷ 各 2 份）
+  var OP_POOL = ['+', '+', '+', '-', '-', '-', '*', '*', '/', '/'];
+
+  function buildTwoOperand(rng, p) {
+    for (var i = 0; i < 12; i++) {
+      var ast = ARITH_BUILDERS[pick(rng, OP_POOL)](rng, p);
+      if (ast) return ast;
+    }
+    return opNode('+', numNode(2), numNode(2)); // 兜底：上限极小时仍然合法
+  }
+
+  // -------------------------------------------------------------------------
+  // 三数模板（脱式混合运算）
+  // parens 标记该模板是否出现括号，供“允许括号”开关过滤
+  // -------------------------------------------------------------------------
+  var MIXED_BUILDERS = [
+    { id: 'a+b-c', parens: false, build: function (rng, p) {
+        var a = rint(rng, 1, p.maxValue - 2);
+        var b = rint(rng, 1, p.maxValue - a - 1);
+        var c = rint(rng, 1, a + b - 1);
+        return opNode('-', opNode('+', numNode(a), numNode(b)), numNode(c));
+      } },
+    { id: 'a-b+c', parens: false, build: function (rng, p) {
+        var a = rint(rng, 2, p.maxValue - 1);
+        var b = rint(rng, 1, a - 1);
+        var c = rint(rng, 1, p.maxValue - (a - b));
+        return opNode('+', opNode('-', numNode(a), numNode(b)), numNode(c));
+      } },
+    { id: 'a-b-c', parens: false, build: function (rng, p) {
+        var a = rint(rng, 3, p.maxValue);
+        var b = rint(rng, 1, a - 2);
+        var c = rint(rng, 1, a - b - 1);
+        return opNode('-', opNode('-', numNode(a), numNode(b)), numNode(c));
+      } },
+    { id: 'a+b+c', parens: false, build: function (rng, p) {
+        var a = rint(rng, 1, p.maxValue - 2);
+        var b = rint(rng, 1, p.maxValue - a - 1);
+        var c = rint(rng, 1, p.maxValue - a - b);
+        return opNode('+', opNode('+', numNode(a), numNode(b)), numNode(c));
+      } },
+    { id: 'a×b+c', parens: false, build: function (rng, p) {
+        var m = mulPair(rng, p, p.maxValue - 1);
+        if (!m) return null;
+        var c = rint(rng, 1, p.maxValue - m.a * m.b);
+        return opNode('+', opNode('*', numNode(m.a), numNode(m.b)), numNode(c));
+      } },
+    { id: 'a×b-c', parens: false, build: function (rng, p) {
+        var m = mulPair(rng, p, p.maxValue);
+        if (!m) return null;
+        var c = rint(rng, 1, m.a * m.b - 1);
+        return opNode('-', opNode('*', numNode(m.a), numNode(m.b)), numNode(c));
+      } },
+    { id: 'a+b×c', parens: false, build: function (rng, p) {
+        var a = rint(rng, 1, Math.max(1, p.maxValue - 4));
+        var m = mulPair(rng, p, p.maxValue - a);
+        if (!m) return null;
+        return opNode('+', numNode(a), opNode('*', numNode(m.a), numNode(m.b)));
+      } },
+    { id: 'a×b+c（序换）', parens: false, build: function (rng, p) {
+        var a = rint(rng, 1, Math.max(1, p.maxValue - 4));
+        var m = mulPair(rng, p, p.maxValue - a);
+        if (!m) return null;
+        return opNode('+', opNode('*', numNode(m.a), numNode(m.b)), numNode(a));
+      } },
+    { id: 'a-b×c', parens: false, build: function (rng, p) {
+        var a = rint(rng, 5, p.maxValue);
+        var m = mulPair(rng, p, a - 1);
+        if (!m) return null;
+        return opNode('-', numNode(a), opNode('*', numNode(m.a), numNode(m.b)));
+      } },
+    { id: 'a÷b+c', parens: false, build: function (rng, p) {
+        var d = divPair(rng, p, p.maxValue - 1, 1);
+        if (!d) return null;
+        var c = rint(rng, 1, p.maxValue - d.a);
+        return opNode('+', opNode('/', numNode(d.a), numNode(d.b)), numNode(c));
+      } },
+    { id: 'a÷b-c', parens: false, build: function (rng, p) {
+        var d = divPair(rng, p, p.maxValue, 2);
+        if (!d) return null;
+        var c = rint(rng, 1, d.q - 1);
+        return opNode('-', opNode('/', numNode(d.a), numNode(d.b)), numNode(c));
+      } },
+    { id: 'c+a÷b', parens: false, build: function (rng, p) {
+        var d = divPair(rng, p, p.maxValue - 1, 1);
+        if (!d) return null;
+        var a = rint(rng, 1, p.maxValue - d.a);
+        return opNode('+', numNode(a), opNode('/', numNode(d.a), numNode(d.b)));
+      } },
+    { id: 'a-b÷c', parens: false, build: function (rng, p) {
+        var d = divPair(rng, p, p.maxValue, 1);
+        if (!d) return null;
+        var a = rint(rng, d.q + 1, p.maxValue);
+        return opNode('-', numNode(a), opNode('/', numNode(d.a), numNode(d.b)));
+      } },
+
+    // ---------------- 带括号：括号内先算，再与外部运算 ----------------
+    { id: '(a+b)×c', parens: true, build: function (rng, p) {
+        var c = rint(rng, 2, Math.min(p.maxFactor, Math.floor(p.maxValue / 2)));
+        var s = rint(rng, 2, Math.floor(p.maxValue / c));
+        var a = rint(rng, 1, s - 1);
+        return opNode('*', grpNode(opNode('+', numNode(a), numNode(s - a))), numNode(c));
+      } },
+    { id: '(a-b)×c', parens: true, build: function (rng, p) {
+        var c = rint(rng, 2, Math.min(p.maxFactor, Math.floor(p.maxValue / 2)));
+        var d = rint(rng, 2, Math.floor(p.maxValue / c));
+        var a = rint(rng, d + 1, p.maxValue);
+        return opNode('*', grpNode(opNode('-', numNode(a), numNode(a - d))), numNode(c));
+      } },
+    { id: 'c×(a+b)', parens: true, build: function (rng, p) {
+        var c = rint(rng, 2, Math.min(p.maxFactor, Math.floor(p.maxValue / 2)));
+        var s = rint(rng, 2, Math.floor(p.maxValue / c));
+        var a = rint(rng, 1, s - 1);
+        return opNode('*', numNode(c), grpNode(opNode('+', numNode(a), numNode(s - a))));
+      } },
+    { id: 'c×(a-b)', parens: true, build: function (rng, p) {
+        var c = rint(rng, 2, Math.min(p.maxFactor, Math.floor(p.maxValue / 2)));
+        var d = rint(rng, 2, Math.floor(p.maxValue / c));
+        var a = rint(rng, d + 1, p.maxValue);
+        return opNode('*', numNode(c), grpNode(opNode('-', numNode(a), numNode(a - d))));
+      } },
+    { id: '(a+b)÷c', parens: true, build: function (rng, p) {
+        var c = rint(rng, 2, Math.min(p.maxFactor, Math.floor(p.maxValue / 2)));
+        var qMax = Math.min(p.maxFactor, Math.floor(p.maxValue / c));
+        if (qMax < 2) return null;
+        var s = c * rint(rng, 2, qMax);
+        var a = rint(rng, 1, s - 1);
+        return opNode('/', grpNode(opNode('+', numNode(a), numNode(s - a))), numNode(c));
+      } },
+    { id: '(a-b)÷c', parens: true, build: function (rng, p) {
+        var c = rint(rng, 2, Math.min(p.maxFactor, Math.floor((p.maxValue - 1) / 2)));
+        var qMax = Math.min(p.maxFactor, Math.floor((p.maxValue - 1) / c));
+        if (qMax < 2) return null;
+        var s = c * rint(rng, 2, qMax); // s ≤ maxValue - 1，保证 a 有取值空间
+        var a = rint(rng, s + 1, p.maxValue);
+        return opNode('/', grpNode(opNode('-', numNode(a), numNode(a - s))), numNode(c));
+      } },
+    { id: 'a÷(b+c)', parens: true, build: function (rng, p) {
+        var s = rint(rng, 2, Math.min(p.maxFactor, Math.floor(p.maxValue / 2)));
+        var qMax = Math.min(p.maxFactor, Math.floor(p.maxValue / s));
+        if (qMax < 2) return null;
+        var q = rint(rng, 2, qMax);
+        var b = rint(rng, 1, s - 1);
+        return opNode('/', numNode(s * q), grpNode(opNode('+', numNode(b), numNode(s - b))));
+      } },
+    { id: 'a÷(b-c)', parens: true, build: function (rng, p) {
+        var s = rint(rng, 2, Math.min(p.maxFactor, Math.floor(p.maxValue / 2)));
+        var qMax = Math.min(p.maxFactor, Math.floor(p.maxValue / s));
+        if (qMax < 2) return null;
+        var q = rint(rng, 2, qMax);
+        var b = rint(rng, s + 1, Math.min(p.maxValue, s + p.maxFactor));
+        return opNode('/', numNode(s * q), grpNode(opNode('-', numNode(b), numNode(b - s))));
+      } },
+    { id: 'a-(b+c)', parens: true, build: function (rng, p) {
+        var s = rint(rng, 2, p.maxValue - 1);
+        var a = rint(rng, s + 1, p.maxValue);
+        var b = rint(rng, 1, s - 1);
+        return opNode('-', numNode(a), grpNode(opNode('+', numNode(b), numNode(s - b))));
+      } }
+  ];
+
+  // -------------------------------------------------------------------------
+  // tokens 与展示
+  // -------------------------------------------------------------------------
+  function tokensOf(node, out) {
+    out = out || [];
+    if (node.t === 'num') out.push(String(node.v));
+    else if (node.t === 'group') { out.push('('); tokensOf(node.e, out); out.push(')'); }
+    else if (node.t === 'op') { tokensOf(node.l, out); out.push(node.op); tokensOf(node.r, out); }
+    return out;
+  }
+
+  /** tokens → 展示字符串，例如 ['(','12','+','8',')','*','3','=','□'] → '(12 + 8) × 3 = □' */
+  function formatTokens(tokens) {
+    var s = '';
+    for (var i = 0; i < tokens.length; i++) {
+      var tk = tokens[i];
+      if (tk === '(') s += '(';
+      else if (tk === ')') s = s.replace(/\s+$/, '') + ')';
+      else if (tk === '=') s += ' = ';
+      else if (OP_KEYS.indexOf(tk) >= 0) s += ' ' + symbolOf(tk) + ' ';
+      else s += tk;
+    }
+    return s.replace(/\s{2,}/g, ' ').trim();
+  }
+
+  function countNumbers(tokens) {
+    var n = 0;
+    for (var i = 0; i < tokens.length; i++) {
+      if (tokens[i] !== '=' && tokens[i] !== BLANK && tokens[i] !== '(' && tokens[i] !== ')' &&
+          OP_KEYS.indexOf(tokens[i]) < 0) n++;
+    }
+    return n;
+  }
+
+  function isOperatorToken(tk) { return OP_KEYS.indexOf(tk) >= 0; }
+
+  // -------------------------------------------------------------------------
+  // 组装一道题
+  // -------------------------------------------------------------------------
+  function makeQuestion(type, ast, slot, p) {
+    var problems = [];
+    var result = evalNode(ast, p, problems);
+    if (result == null || problems.length) return null; // 构造阶段就不合法，交给调用方重试
+
+    var lv = null, rv = null;
+    if (ast.t === 'op') {
+      lv = evalNode(ast.l, p, []);
+      rv = evalNode(ast.r, p, []);
+    }
+
+    var tokens;
+    if (type === 'unknown') {
+      // 两数等式，空位随机落在 左操作数 / 右操作数 / 结果 上
+      var left = String(lv), right = String(rv), res = String(result);
+      if (slot === 'left') tokens = [BLANK, ast.op, right, '=', res];
+      else if (slot === 'right') tokens = [left, ast.op, BLANK, '=', res];
+      else { slot = 'result'; tokens = [left, ast.op, right, '=', BLANK]; }
+    } else {
+      slot = 'result';
+      tokens = tokensOf(ast).concat(['=', BLANK]);
+    }
+
+    var answer = slot === 'result' ? result : (slot === 'left' ? lv : rv);
+    if (!Number.isInteger(answer) || answer < 1 || answer > p.maxValue) return null;
+
+    var solutionTokens = tokens.map(function (tk) { return tk === BLANK ? String(answer) : tk; });
+    return {
+      type: type,
+      ast: ast,
+      tokens: tokens,
+      slot: slot,
+      result: result,
+      answer: answer,
+      operandCount: countNumbers(tokens),
+      key: type + '|' + tokens.join(' '),
+      display: formatTokens(tokens),
+      solution: formatTokens(solutionTokens)
+    };
+  }
+
+  function buildQuestion(rng, p) {
+    var type = pick(rng, p.types);
+
+    if (type === 'unknown') {
+      for (var i = 0; i < 12; i++) {
+        var astU = buildTwoOperand(rng, p);
+        var qU = makeQuestion('unknown', astU, pick(rng, ['left', 'right', 'result']), p);
+        if (qU) return qU;
+      }
+      return null;
+    }
+
+    if (type === 'mixed') {
+      var wantThree = p.operandCount === 'random' ? chance(rng, 0.6) : p.operandCount === 3;
+      if (wantThree) {
+        var pool = MIXED_BUILDERS.filter(function (b) { return !b.parens || p.allowParens; });
+        for (var k = 0; k < 24; k++) {
+          var astM = pick(rng, pool).build(rng, p);
+          if (!astM) continue;
+          var qM = makeQuestion('mixed', astM, 'result', p);
+          if (qM) return qM;
+        }
+      }
+      // 两数脱式（或三数模板全部无解时的回退）
+      for (var j = 0; j < 12; j++) {
+        var qM2 = makeQuestion('mixed', buildTwoOperand(rng, p), 'result', p);
+        if (qM2) return qM2;
+      }
+      return null;
+    }
+
+    // arith：口算填空
+    for (var m = 0; m < 12; m++) {
+      var qA = makeQuestion('arith', buildTwoOperand(rng, p), 'result', p);
+      if (qA) return qA;
+    }
+    return null;
+  }
+
+  // -------------------------------------------------------------------------
+  // 参数归一化与校验
+  // -------------------------------------------------------------------------
+  function normalizeParams(input) {
+    var p = {};
+    var src = input || {};
+    for (var key in DEFAULT_PARAMS) if (Object.prototype.hasOwnProperty.call(DEFAULT_PARAMS, key)) p[key] = src[key];
+
+    var validTypes = ['arith', 'mixed', 'unknown'];
+    var types = Array.isArray(p.types) ? p.types.filter(function (t) { return validTypes.indexOf(t) >= 0; }) : [];
+    p.types = types.length ? types : DEFAULT_PARAMS.types.slice();
+
+    p.count = clamp(toInt(p.count, DEFAULT_PARAMS.count), 1, 200);
+    p.maxValue = clamp(toInt(p.maxValue, DEFAULT_PARAMS.maxValue), 10, 1000);
+    p.maxFactor = clamp(toInt(p.maxFactor, DEFAULT_PARAMS.maxFactor), 2, 12);
+    var oc = Number(p.operandCount);
+    p.operandCount = (oc === 2 || oc === 3) ? oc : 'random';
+    p.allowParens = p.allowParens !== false;
+    p.unique = p.unique !== false;
+    p.seed = clamp(toInt(p.seed, DEFAULT_PARAMS.seed), 1, 999999999);
+    return p;
+  }
+
+  /** 对单题做全量硬约束校验，返回问题描述数组（空数组 = 通过） */
+  function validateQuestion(q, params) {
+    var p = normalizeParams(params);
+    var problems = [];
+    if (!q || !Array.isArray(q.tokens)) return ['题目结构异常'];
+
+    var result = evalNode(q.ast, p, problems);
+
+    var blanks = q.tokens.filter(function (t) { return t === BLANK; }).length;
+    if (blanks !== 1) problems.push('空位数量应为 1，实际为 ' + blanks);
+    if (q.tokens[q.tokens.length - 1] !== BLANK && q.type !== 'unknown') problems.push('空位应位于等号之后');
+    if (q.tokens.indexOf('=') < 0) problems.push('缺少等号');
+
+    if (result != null && result !== q.result) problems.push('AST 结果与登记结果不一致');
+
+    if (!Number.isInteger(q.answer)) problems.push('答案不是整数：' + q.answer);
+    else {
+      if (q.answer < 1) problems.push('答案小于 1：' + q.answer);
+      if (q.answer > p.maxValue) problems.push('答案超过上限 ' + p.maxValue + '：' + q.answer);
+    }
+
+    // 位次与答案的对应关系
+    if (q.type === 'unknown' && q.ast && q.ast.t === 'op') {
+      var lv = evalNode(q.ast.l, p, []);
+      var rv = evalNode(q.ast.r, p, []);
+      var expect = q.slot === 'left' ? lv : q.slot === 'right' ? rv : result;
+      if (expect !== q.answer) problems.push('答案与空位不匹配（' + q.slot + '）');
+      var blankAt = q.tokens.indexOf(BLANK);
+      var posOk = (q.slot === 'left' && blankAt === 0) ||
+                  (q.slot === 'right' && blankAt === 2) ||
+                  (q.slot === 'result' && blankAt === q.tokens.length - 1);
+      if (!posOk) problems.push('空位位置与 slot 不一致');
+    }
+    if ((q.type === 'arith' || q.type === 'mixed') && result != null && q.answer !== result) {
+      problems.push('口算/脱式题的答案应等于算式结果');
+    }
+    return problems;
+  }
+
+  function validateSheet(sheet, params) {
+    var p = params || (sheet && sheet.params);
+    var list = (sheet && sheet.questions) || [];
+    var all = [];
+    var byType = {};
+    list.forEach(function (q, i) {
+      var problems = validateQuestion(q, p);
+      byType[q.type] = (byType[q.type] || 0) + 1;
+      if (problems.length) all.push({ index: i + 1, display: q.display, problems: problems });
+    });
+    return { total: list.length, passed: list.length - all.length, failed: all, byType: byType };
+  }
+
+  // -------------------------------------------------------------------------
+  // 主入口
+  // -------------------------------------------------------------------------
+  function generateSheet(input) {
+    var p = normalizeParams(input);
+    var rng = createRNG(p.seed);
+    var questions = [];
+    var seen = Object.create(null);
+    var stats = { attempts: 0, discarded: 0, duplicates: 0, invalid: 0, byType: {} };
+    var maxAttempts = p.count * 200 + 2000;
+
+    while (questions.length < p.count && stats.attempts < maxAttempts) {
+      stats.attempts++;
+      var q = buildQuestion(rng, p);
+      if (!q) { stats.discarded++; continue; }
+      if (validateQuestion(q, p).length) { stats.invalid++; continue; }
+      if (p.unique && seen[q.key]) { stats.duplicates++; continue; }
+      seen[q.key] = true;
+      q.index = questions.length + 1;
+      stats.byType[q.type] = (stats.byType[q.type] || 0) + 1;
+      questions.push(q);
+    }
+
+    var warnings = [];
+    if (questions.length < p.count) {
+      warnings.push('在当前参数下可生成的互不重复题目不足，实际生成 ' + questions.length + ' / ' + p.count + ' 题。');
+    }
+
+    return {
+      version: VERSION,
+      seed: p.seed,
+      params: p,
+      questions: questions,
+      stats: stats,
+      warnings: warnings
+    };
+  }
+
+  return {
+    VERSION: VERSION,
+    BLANK: BLANK,
+    OP_KEYS: OP_KEYS,
+    DEFAULT_PARAMS: DEFAULT_PARAMS,
+    symbolOf: symbolOf,
+    formatTokens: formatTokens,
+    isOperatorToken: isOperatorToken,
+    createRNG: createRNG,
+    normalizeParams: normalizeParams,
+    generateSheet: generateSheet,
+    validateQuestion: validateQuestion,
+    validateSheet: validateSheet,
+    // 以下导出仅供测试与后续扩展使用
+    _internals: {
+      numNode: numNode, opNode: opNode, grpNode: grpNode,
+      evalNode: evalNode, tokensOf: tokensOf, buildQuestion: buildQuestion,
+      MIXED_BUILDERS: MIXED_BUILDERS, ARITH_BUILDERS: ARITH_BUILDERS
+    }
+  };
+});
+
+</script>
+<script>
+/* 出题工作台界面层 v0.1.0
+ * 只负责界面与预留接口；出题逻辑全部在 engine.js（window.FQ_ENGINE）。
+ * 打印 / 自测 / 批量三个模块为预留接口，见文件顶部 RESERVED_MODULES 的契约说明。
+ */
+(function () {
+  'use strict';
+
+  var ENGINE = window.FQ_ENGINE;
+
+  var TYPE_LABELS = { arith: '口算填空', mixed: '脱式混合', unknown: '求未知数' };
+
+  /* -------------------------------------------------------------------------
+   * 预留模块清单
+   * 契约：FQ.registerModule(key, { run(sheet) { ... } })
+   *   key   —— 'print' | 'quiz' | 'batch'
+   *   sheet —— FQ.getSheet() 的返回值：{ seed, params, questions, stats, warnings }
+   *            questions[i] = { index, type, tokens, slot, result, answer,
+   *                             operandCount, key, display, solution }
+   * 注册后对应按钮自动变为可用状态，点击即调用 run(sheet)。
+   * ---------------------------------------------------------------------- */
+  var RESERVED_MODULES = [
+    {
+      key: 'print',
+      label: '打印试卷',
+      hint: 'A4 分页版式 + 答案独页',
+      contract: 'FQ.registerModule("print", { run(sheet) {} })'
+    },
+    {
+      key: 'quiz',
+      label: '开始自测',
+      hint: '在线作答 / 即时判分 / 倒计时',
+      contract: 'FQ.registerModule("quiz", { run(sheet) {} })'
+    },
+    {
+      key: 'batch',
+      label: '批量生成',
+      hint: '一次 N 套 + 打包导出',
+      contract: 'FQ.registerModule("batch", { run(sheet) {} })'
+    }
+  ];
+
+  var state = {
+    params: null,
+    sheet: null,
+    showAnswers: false,
+    cols: 3,
+    modules: {},
+    listeners: {}
+  };
+
+  var el = {};
+  function $(id) { return document.getElementById(id); }
+
+  /* ------------------------------ 事件总线 ------------------------------ */
+  function on(evt, cb) {
+    (state.listeners[evt] = state.listeners[evt] || []).push(cb);
+    return function () { off(evt, cb); };
+  }
+  function off(evt, cb) {
+    var list = state.listeners[evt] || [];
+    var i = list.indexOf(cb);
+    if (i >= 0) list.splice(i, 1);
+  }
+  function emit(evt, payload) {
+    (state.listeners[evt] || []).slice().forEach(function (cb) {
+      try { cb(payload); } catch (err) { console.error('[FQ] 监听器出错：', err); }
+    });
+  }
+
+  /* -------------------------------- 提示 -------------------------------- */
+  var toastTimer = null;
+  function toast(msg, kind) {
+    var node = el.toast;
+    node.textContent = msg;
+    node.className = 'toast toast--show' + (kind ? ' toast--' + kind : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { node.className = 'toast'; }, 4600);
+  }
+
+  /* ------------------------------ 参数读写 ------------------------------ */
+  function collectParams() {
+    var types = Array.prototype.slice.call(document.querySelectorAll('#types input[type=checkbox]'))
+      .filter(function (c) { return c.checked; })
+      .map(function (c) { return c.value; });
+    return {
+      types: types,
+      count: Number(el.count.value),
+      maxValue: Number(el.maxValue.value),
+      operandCount: el.operandCount.value,
+      allowParens: el.allowParens.checked,
+      unique: el.unique.checked,
+      maxFactor: 9,
+      seed: Number(el.seed.value)
+    };
+  }
+
+  function applyParamsToControls(params) {
+    var p = ENGINE.normalizeParams(params || ENGINE.DEFAULT_PARAMS);
+    Array.prototype.slice.call(document.querySelectorAll('#types input[type=checkbox]'))
+      .forEach(function (c) { c.checked = p.types.indexOf(c.value) >= 0; });
+    el.count.value = p.count;
+    el.maxValue.value = String(p.maxValue);
+    el.operandCount.value = String(p.operandCount);
+    el.allowParens.checked = p.allowParens;
+    el.unique.checked = p.unique;
+    el.seed.value = p.seed;
+  }
+
+  /* ------------------------------- 渲染层 ------------------------------- */
+  function exprHTML(q) {
+    return q.tokens.map(function (tk) {
+      if (tk === ENGINE.BLANK) return '<i class="blank" title="填空"></i>';
+      if (tk === '(') return '<span class="paren">(</span>';
+      if (tk === ')') return '<span class="paren">)</span>';
+      if (tk === '=') return '<span class="eq">=</span>';
+      if (ENGINE.isOperatorToken(tk)) return '<span class="op">' + ENGINE.symbolOf(tk) + '</span>';
+      return '<span class="num">' + tk + '</span>';
+    }).join('');
+  }
+
+  function metric(label, value, kind) {
+    return '<span class="metric' + (kind ? ' metric--' + kind : '') + '">' +
+      label + ' <b>' + value + '</b></span>';
+  }
+
+  function renderMetrics(sheet) {
+    var report = ENGINE.validateSheet(sheet, sheet.params);
+    var byType = Object.keys(report.byType).map(function (k) {
+      return TYPE_LABELS[k] + ' ' + report.byType[k];
+    }).join(' · ') || '—';
+
+    var html = [
+      metric('题量', sheet.questions.length + ' / ' + sheet.params.count),
+      metric('随机种子', sheet.seed),
+      metric('题型分布', byType),
+      report.failed.length
+        ? metric('约束校验', '失败 ' + report.failed.length + ' 题', 'bad')
+        : metric('约束校验', '通过 ' + report.passed + '/' + report.total, 'ok'),
+      metric('生成耗时', (sheet.elapsedMs != null ? sheet.elapsedMs + ' ms' : '—')),
+      metric('去重丢弃', sheet.stats.duplicates + sheet.stats.discarded)
+    ].join('');
+
+    if (sheet.warnings.length) {
+      html += '<p class="warnings">' + sheet.warnings.join('<br>') + '</p>';
+    }
+    el.metrics.innerHTML = html;
+  }
+
+  function renderPaper(sheet) {
+    el.paper.style.setProperty('--cols', String(state.cols));
+
+    var head = '<div class="paper__head">' +
+      '<div class="paper__title">二年级四则运算 · ' + sheet.params.maxValue + ' 以内加减 + 表内乘除</div>' +
+      '<div class="paper__meta">共 ' + sheet.questions.length + ' 题　姓名 __________　用时 ______</div>' +
+      '</div>';
+
+    var items = sheet.questions.map(function (q) {
+      return '<div class="q" data-type="' + q.type + '">' +
+        '<span class="q__no">' + q.index + '</span>' +
+        '<span class="q__body">' + exprHTML(q) + '</span>' +
+        (state.showAnswers ? '<span class="q__ans">' + q.answer + '</span>' : '') +
+        '</div>';
+    }).join('');
+
+    el.paper.innerHTML = head + '<div class="paper__grid">' + items + '</div>';
+
+    if (!sheet.questions.length) {
+      el.paper.innerHTML = head + '<p class="hint">当前参数下没有生成出题目。</p>';
+    }
+  }
+
+  /* ------------------------------- 出题 ------------------------------- */
+  function generate() {
+    var params = collectParams();
+    if (!params.types.length) {
+      toast('至少要保留一种题型', 'warn');
+      return;
+    }
+    var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+    state.params = params;
+    var sheet = ENGINE.generateSheet(params);
+    var t1 = (window.performance && performance.now) ? performance.now() : Date.now();
+    sheet.elapsedMs = Math.max(0, Math.round(t1 - t0));
+    state.sheet = sheet;
+
+    renderMetrics(sheet);
+    renderPaper(sheet);
+    emit('sheet:generated', sheet);
+  }
+
+  /* --------------------------- 预留模块接口 --------------------------- */
+  function moduleSpec(key) {
+    for (var i = 0; i < RESERVED_MODULES.length; i++) {
+      if (RESERVED_MODULES[i].key === key) return RESERVED_MODULES[i];
+    }
+    return null;
+  }
+
+  function buildActionBar() {
+    el.actions.innerHTML = RESERVED_MODULES.map(function (m) {
+      var impl = state.modules[m.key];
+      return '<button class="btn btn--module" type="button" data-module="' + m.key + '"' +
+        ' title="' + m.contract + '">' +
+        '<span>' + m.label + '</span>' +
+        '<em class="badge' + (impl ? ' badge--ready' : '') + '">' + (impl ? '已接入' : '预留') + '</em>' +
+        '<small>' + m.hint + '</small>' +
+        '</button>';
+    }).join('');
+  }
+
+  function registerModule(key, impl) {
+    if (!moduleSpec(key)) throw new Error('未知模块：' + key + '（可用：print / quiz / batch）');
+    if (!impl || typeof impl.run !== 'function') throw new Error('模块实现必须提供 run(sheet) 方法');
+    state.modules[key] = impl;
+    buildActionBar();
+    emit('module:registered', { key: key, impl: impl });
+    toast('模块「' + moduleSpec(key).label + '」已接入', 'ok');
+  }
+
+  function runModule(key) {
+    var spec = moduleSpec(key);
+    var impl = state.modules[key];
+    if (!spec) return;
+    if (!impl) {
+      toast('「' + spec.label + '」尚未实现。预留接口：' + spec.contract, 'warn');
+      return;
+    }
+    try {
+      var result = impl.run(state.sheet, FQ);
+      if (result && typeof result.then === 'function') {
+        result.catch(function (err) { toast('「' + spec.label + '」执行出错：' + err.message, 'error'); });
+      }
+    } catch (err) {
+      toast('「' + spec.label + '」执行出错：' + err.message, 'error');
+    }
+  }
+
+  /* ------------------------------- 绑定 ------------------------------- */
+  function bind() {
+    el.types.addEventListener('change', function (e) {
+      var checked = document.querySelectorAll('#types input[type=checkbox]:checked');
+      if (!checked.length) {
+        e.target.checked = true;
+        toast('至少要保留一种题型', 'warn');
+        return;
+      }
+      generate();
+    });
+
+    [el.count, el.maxValue, el.operandCount, el.allowParens, el.unique].forEach(function (node) {
+      node.addEventListener('change', generate);
+    });
+
+    el.seed.addEventListener('change', generate);
+    el.seed.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') generate();
+    });
+
+    el.reseed.addEventListener('click', function () {
+      el.seed.value = String(1 + Math.floor(Math.random() * 999999999));
+      generate();
+    });
+
+    el.regenerate.addEventListener('click', generate);
+
+    el.showAnswers.addEventListener('change', function () {
+      state.showAnswers = el.showAnswers.checked;
+      if (state.sheet) renderPaper(state.sheet);
+    });
+
+    el.cols.addEventListener('change', function () {
+      state.cols = Number(el.cols.value) || 3;
+      if (state.sheet) renderPaper(state.sheet);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); generate(); }
+    });
+  }
+
+  /* ------------------------------- 对外 API ------------------------------- */
+  var FQ = {
+    version: ENGINE.VERSION,
+    engine: ENGINE,
+    TYPE_LABELS: TYPE_LABELS,
+    RESERVED_MODULES: RESERVED_MODULES,
+    state: state,
+    on: on,
+    off: off,
+    emit: emit,
+    getSheet: function () { return state.sheet; },
+    getParams: function () { return state.params; },
+    regenerate: generate,
+    registerModule: registerModule,
+    setParams: function (patch) {
+      applyParamsToControls(Object.assign({}, state.params || ENGINE.DEFAULT_PARAMS, patch || {}));
+      generate();
+      return state.sheet;
+    }
+  };
+  window.FQ = FQ;
+
+  /* ------------------------------- 启动 ------------------------------- */
+  function init() {
+    el = {
+      types: document.getElementById('types'),
+      count: $('count'),
+      maxValue: $('maxValue'),
+      operandCount: $('operandCount'),
+      allowParens: $('allowParens'),
+      unique: $('unique'),
+      seed: $('seed'),
+      reseed: $('reseed'),
+      regenerate: $('regenerate'),
+      showAnswers: $('showAnswers'),
+      cols: $('cols'),
+      metrics: $('metrics'),
+      paper: $('paper'),
+      actions: $('actionbar-buttons'),
+      actionHint: $('actionbar-hint'),
+      toast: $('toast'),
+      engineVersion: $('engine-version')
+    };
+
+    el.engineVersion.textContent = '引擎 v' + ENGINE.VERSION;
+    el.actionHint.textContent = '打印 / 自测 / 批量 三个模块仅预留接口，未实现。';
+
+    applyParamsToControls(ENGINE.DEFAULT_PARAMS);
+    buildActionBar();
+    bind();
+    generate();
+
+    console.info(
+      '[FQ] 出题工作台 v' + ENGINE.VERSION + '\n' +
+      '· FQ.getSheet() 取当前题目（含 params / questions / seed / stats）\n' +
+      '· FQ.setParams({ maxValue: 20, types: ["arith"] }) 改参数并重新出题\n' +
+      '· FQ.registerModule("print", { run(sheet) { /* 待实现 */ } }) 接入预留模块\n' +
+      '· FQ.on("sheet:generated", sheet => {}) 监听重新出题'
+    );
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+</script>
+</body>
+</html>

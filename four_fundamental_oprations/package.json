@@ -1,0 +1,12 @@
+{
+  "name": "four-fundamental-operations",
+  "version": "0.1.0",
+  "private": true,
+  "description": "小学二年级四则运算出题工作台（纯前端单文件 HTML + 可测试的出题引擎）",
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "verify": "node tools/verify-engine.cjs",
+    "check": "node tools/verify-engine.cjs && node tools/check-page.cjs && node build.mjs"
+  }
+}

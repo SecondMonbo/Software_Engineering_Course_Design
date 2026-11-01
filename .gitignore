@@ -1,0 +1,16 @@
+﻿# 测试数据集（体积过大，不入库）
+code_count/ctest/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 依赖
+node_modules/
