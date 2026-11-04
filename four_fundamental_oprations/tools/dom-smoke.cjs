@@ -78,14 +78,18 @@ check(seedMetric === '20240501', '应显示当前随机种子', String(seedMetri
 check(countMetric === '20 / 20', '题量指标应为 20 / 20', String(countMetric));
 check(!/metric--bad/.test(html), '不应出现失败的校验指标');
 
-// ---- 顶栏与预留模块 ----
+// ---- 顶栏与模块入口 ----
 check(/引擎 v0\.1\.0/.test(html), '应显示引擎版本号');
 const moduleButtons = count(/data-module="/g);
-check(moduleButtons === 3, '底部应有 3 个预留模块按钮', '实际 ' + moduleButtons + ' 个');
+check(moduleButtons === 3, '底部应有 3 个模块按钮', '实际 ' + moduleButtons + ' 个');
 ['print', 'quiz', 'batch'].forEach((k) => {
-  check(html.includes('data-module="' + k + '"'), '应存在预留按钮：' + k);
+  check(html.includes('data-module="' + k + '"'), '应存在模块按钮：' + k);
 });
-check(count(/>预留</g) === 3, '三个按钮都应标记为「预留」', '标记数 ' + count(/>预留</g));
+check(count(/>已接入</g) === 1, '自测按钮应标记为「已接入」');
+check(count(/>预留</g) === 2, '打印和批量按钮应标记为「预留」');
+check(/id="quiz-dialog"/.test(html), '应存在在线自测对话框');
+check(/id="quiz-duration"[^>]*min="1"[^>]*max="180"[^>]*value="5"/.test(html),
+      '自测时长应可设置为 1–180 分钟，默认 5 分钟');
 
 // ---- 参数面板状态 ----
 check(/id="types"[\s\S]*?value="arith" checked/.test(html), '题型默认全选');

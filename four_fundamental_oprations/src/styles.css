@@ -380,6 +380,71 @@ body {
 .toast--error { background: #9b2c2c; }
 .toast--ok { background: #17603a; }
 
+/* ------------------------------- 在线自测 ------------------------------- */
+.quiz-dialog {
+  width: min(760px, calc(100vw - 28px));
+  max-width: none;
+  max-height: min(88vh, 900px);
+  padding: 22px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(16, 24, 40, .25);
+}
+
+.quiz-dialog::backdrop { background: rgba(25, 35, 50, .48); }
+.quiz-dialog[open] { display: flex; flex-direction: column; gap: 14px; }
+.quiz-dialog [hidden] { display: none !important; }
+.quiz-dialog__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.quiz-dialog__head h2 { margin: 0; font-size: 19px; }
+.quiz-setup { display: flex; align-items: flex-end; gap: 10px; }
+.quiz-setup .field { width: min(220px, 55%); }
+.quiz-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.quiz-status strong { color: var(--brand-ink); font-size: 20px; font-variant-numeric: tabular-nums; }
+.quiz-status span { color: var(--muted); font-size: 13px; }
+.quiz-questions {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+  padding: 2px;
+}
+.quiz-question {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.quiz-question__text { overflow-wrap: anywhere; font-size: 15px; font-variant-numeric: tabular-nums; }
+.quiz-question__answer {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 9px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.quiz-question__answer:focus { outline: 2px solid rgba(47, 109, 246, .35); border-color: var(--brand); }
+.quiz-question__answer--correct { background: var(--ok-bg); border-color: var(--ok-line); }
+.quiz-question__answer--incorrect { background: #fdecec; border-color: #f3c2c2; }
+.quiz-question__feedback { color: var(--muted); font-size: 12px; }
+.quiz-question__feedback--correct { color: var(--ok); }
+.quiz-question__feedback--incorrect { color: #9b2c2c; }
+.quiz-result { margin: 0; padding: 10px 12px; color: var(--ink-2); background: #fff; border-radius: 9px; }
+.quiz-dialog__actions { display: flex; gap: 8px; }
+.quiz-history { border-top: 1px solid var(--line); padding-top: 12px; }
+.quiz-history h3 { margin: 0 0 6px; color: var(--ink-2); font-size: 13px; }
+.quiz-history ol { display: grid; gap: 4px; max-height: 100px; overflow: auto; margin: 0; padding-left: 22px; color: var(--muted); font-size: 12px; }
+.quiz-history__empty { list-style: none; margin-left: -22px; }
+
 /* ------------------------------ 接口说明 ------------------------------ */
 .contracts { font-size: 12.5px; color: var(--muted); }
 .contracts summary { cursor: pointer; color: var(--ink-2); font-weight: 600; }
@@ -401,18 +466,22 @@ body {
   .workspace { grid-template-columns: 1fr; }
   .panel { position: static; }
   .paper__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quiz-questions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 620px) {
   .shell { padding: 16px 14px 132px; }
   .paper__grid { grid-template-columns: 1fr; }
   .actionbar { padding: 10px 14px; }
+  .quiz-dialog { padding: 16px; }
+  .quiz-questions { grid-template-columns: 1fr; }
+  .quiz-question { gap: 7px; }
 }
 
 /* 临时规则：正式 A4 分页与答案页属于「打印试卷」预留模块，此处只保证浏览器打印时
    不把工具栏打进去。实现打印模块后可替换本段。 */
 @media print {
-  .topbar__meta, .panel, .actionbar, .stage__tools, .hint, .toast, .contracts { display: none !important; }
+  .topbar__meta, .panel, .actionbar, .stage__tools, .hint, .toast, .contracts, .quiz-dialog { display: none !important; }
   body { background: #fff; }
   .shell { padding: 0; max-width: none; }
   .card { border: 0; box-shadow: none; padding: 0; }

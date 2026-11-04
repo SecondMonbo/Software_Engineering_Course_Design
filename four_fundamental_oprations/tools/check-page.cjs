@@ -35,6 +35,7 @@ for (const m of template.matchAll(/\sid="([^"]+)"/g)) templateIds.add(m[1]);
 const referencedIds = new Set();
 for (const m of app.matchAll(/getElementById\('([^']+)'\)/g)) referencedIds.add(m[1]);
 for (const m of app.matchAll(/\$\('([^']+)'\)/g)) referencedIds.add(m[1]);
+for (const m of template.matchAll(/\saria-labelledby="([^"]+)"/g)) referencedIds.add(m[1]);
 
 for (const id of referencedIds) {
   check(templateIds.has(id), `app.js 引用的 id「${id}」应存在于模板中`);
