@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>四则运算出题工作台 · 二年级</title>
-<meta name="description" content="小学二年级四则运算出题工作台：100 以内加减 + 表内乘除，可复现种子、同套去重。打印 / 自测 / 批量为预留接口。">
+<meta name="description" content="小学二年级四则运算出题工作台：100 以内加减 + 表内乘除，可复现种子、同套去重，支持在线限时自测。">
 <style>
 /* @inject:styles */
 </style>
@@ -21,7 +21,7 @@
       </div>
     </div>
     <div class="topbar__meta">
-      <span class="tag tag--warn">打印 / 自测 / 批量：仅预留接口</span>
+      <span class="tag">在线自测：时长可自定义 · 成绩本机保存</span>
       <span class="tag" id="engine-version">引擎 —</span>
     </div>
   </header>
@@ -82,9 +82,8 @@
 
       <details class="contracts">
         <summary>预留接口说明</summary>
-        <pre>// 打印 / 自测 / 批量 只预留接口，均未实现
+        <pre>// 打印 / 批量仍为预留接口；在线自测已接入
 FQ.registerModule("print", { run(sheet) { /* A4 版式 + 答案页 */ } });
-FQ.registerModule("quiz",  { run(sheet) { /* 作答 / 判分 / 计时 */ } });
 FQ.registerModule("batch", { run(sheet) { /* N 套 + 打包导出 */ } });
 
 // sheet = { seed, params, questions, stats, warnings }
@@ -131,6 +130,37 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog class="quiz-dialog" id="quiz-dialog" aria-labelledby="quiz-title">
+  <div class="quiz-dialog__head">
+    <div>
+      <h2 id="quiz-title">在线自测</h2>
+      <p class="hint">根据当前题目作答，提交后查看错题答案。</p>
+    </div>
+    <button class="btn btn--ghost" id="quiz-close" type="button" aria-label="关闭自测">关闭</button>
+  </div>
+  <div class="quiz-setup" id="quiz-setup">
+    <label class="field" for="quiz-duration">
+      <span class="field__label">自测时长 <em>（1–180 分钟）</em></span>
+      <input id="quiz-duration" type="number" min="1" max="180" step="1" value="5">
+    </label>
+    <button class="btn btn--primary" id="quiz-start" type="button">开始自测</button>
+  </div>
+  <div class="quiz-status" id="quiz-status" hidden>
+    <strong id="quiz-timer" aria-live="off">05:00</strong>
+    <span id="quiz-progress" aria-live="polite">尚未作答</span>
+  </div>
+  <div class="quiz-questions" id="quiz-questions" hidden></div>
+  <p class="quiz-result" id="quiz-result" role="status" aria-live="polite" hidden></p>
+  <div class="quiz-dialog__actions">
+    <button class="btn btn--primary" id="quiz-submit" type="button" hidden>提交自测</button>
+    <button class="btn" id="quiz-restart" type="button" hidden>重新开始</button>
+  </div>
+  <section class="quiz-history" aria-labelledby="quiz-history-title">
+    <h3 id="quiz-history-title">最近自测记录</h3>
+    <ol id="quiz-history"></ol>
+  </section>
+</dialog>
 
 <noscript>
   <p style="padding:16px">本页需要启用 JavaScript 才能出题。</p>

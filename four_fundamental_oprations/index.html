@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>四则运算出题工作台 · 二年级</title>
-<meta name="description" content="小学二年级四则运算出题工作台：100 以内加减 + 表内乘除，可复现种子、同套去重。打印 / 自测 / 批量为预留接口。">
+<meta name="description" content="小学二年级四则运算出题工作台：100 以内加减 + 表内乘除，可复现种子、同套去重，支持在线限时自测。">
 <style>
 /* 出题工作台样式 v0.1.0 —— 无外部依赖（不使用 CDN 字体 / 框架） */
 
@@ -388,6 +388,71 @@ body {
 .toast--error { background: #9b2c2c; }
 .toast--ok { background: #17603a; }
 
+/* ------------------------------- 在线自测 ------------------------------- */
+.quiz-dialog {
+  width: min(760px, calc(100vw - 28px));
+  max-width: none;
+  max-height: min(88vh, 900px);
+  padding: 22px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(16, 24, 40, .25);
+}
+
+.quiz-dialog::backdrop { background: rgba(25, 35, 50, .48); }
+.quiz-dialog[open] { display: flex; flex-direction: column; gap: 14px; }
+.quiz-dialog [hidden] { display: none !important; }
+.quiz-dialog__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.quiz-dialog__head h2 { margin: 0; font-size: 19px; }
+.quiz-setup { display: flex; align-items: flex-end; gap: 10px; }
+.quiz-setup .field { width: min(220px, 55%); }
+.quiz-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.quiz-status strong { color: var(--brand-ink); font-size: 20px; font-variant-numeric: tabular-nums; }
+.quiz-status span { color: var(--muted); font-size: 13px; }
+.quiz-questions {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+  padding: 2px;
+}
+.quiz-question {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.quiz-question__text { overflow-wrap: anywhere; font-size: 15px; font-variant-numeric: tabular-nums; }
+.quiz-question__answer {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 9px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.quiz-question__answer:focus { outline: 2px solid rgba(47, 109, 246, .35); border-color: var(--brand); }
+.quiz-question__answer--correct { background: var(--ok-bg); border-color: var(--ok-line); }
+.quiz-question__answer--incorrect { background: #fdecec; border-color: #f3c2c2; }
+.quiz-question__feedback { color: var(--muted); font-size: 12px; }
+.quiz-question__feedback--correct { color: var(--ok); }
+.quiz-question__feedback--incorrect { color: #9b2c2c; }
+.quiz-result { margin: 0; padding: 10px 12px; color: var(--ink-2); background: #fff; border-radius: 9px; }
+.quiz-dialog__actions { display: flex; gap: 8px; }
+.quiz-history { border-top: 1px solid var(--line); padding-top: 12px; }
+.quiz-history h3 { margin: 0 0 6px; color: var(--ink-2); font-size: 13px; }
+.quiz-history ol { display: grid; gap: 4px; max-height: 100px; overflow: auto; margin: 0; padding-left: 22px; color: var(--muted); font-size: 12px; }
+.quiz-history__empty { list-style: none; margin-left: -22px; }
+
 /* ------------------------------ 接口说明 ------------------------------ */
 .contracts { font-size: 12.5px; color: var(--muted); }
 .contracts summary { cursor: pointer; color: var(--ink-2); font-weight: 600; }
@@ -409,18 +474,22 @@ body {
   .workspace { grid-template-columns: 1fr; }
   .panel { position: static; }
   .paper__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quiz-questions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 620px) {
   .shell { padding: 16px 14px 132px; }
   .paper__grid { grid-template-columns: 1fr; }
   .actionbar { padding: 10px 14px; }
+  .quiz-dialog { padding: 16px; }
+  .quiz-questions { grid-template-columns: 1fr; }
+  .quiz-question { gap: 7px; }
 }
 
 /* 临时规则：正式 A4 分页与答案页属于「打印试卷」预留模块，此处只保证浏览器打印时
    不把工具栏打进去。实现打印模块后可替换本段。 */
 @media print {
-  .topbar__meta, .panel, .actionbar, .stage__tools, .hint, .toast, .contracts { display: none !important; }
+  .topbar__meta, .panel, .actionbar, .stage__tools, .hint, .toast, .contracts, .quiz-dialog { display: none !important; }
   body { background: #fff; }
   .shell { padding: 0; max-width: none; }
   .card { border: 0; box-shadow: none; padding: 0; }
@@ -442,7 +511,7 @@ body {
       </div>
     </div>
     <div class="topbar__meta">
-      <span class="tag tag--warn">打印 / 自测 / 批量：仅预留接口</span>
+      <span class="tag">在线自测：时长可自定义 · 成绩本机保存</span>
       <span class="tag" id="engine-version">引擎 —</span>
     </div>
   </header>
@@ -503,9 +572,8 @@ body {
 
       <details class="contracts">
         <summary>预留接口说明</summary>
-        <pre>// 打印 / 自测 / 批量 只预留接口，均未实现
+        <pre>// 打印 / 批量仍为预留接口；在线自测已接入
 FQ.registerModule("print", { run(sheet) { /* A4 版式 + 答案页 */ } });
-FQ.registerModule("quiz",  { run(sheet) { /* 作答 / 判分 / 计时 */ } });
 FQ.registerModule("batch", { run(sheet) { /* N 套 + 打包导出 */ } });
 
 // sheet = { seed, params, questions, stats, warnings }
@@ -552,6 +620,37 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog class="quiz-dialog" id="quiz-dialog" aria-labelledby="quiz-title">
+  <div class="quiz-dialog__head">
+    <div>
+      <h2 id="quiz-title">在线自测</h2>
+      <p class="hint">根据当前题目作答，提交后查看错题答案。</p>
+    </div>
+    <button class="btn btn--ghost" id="quiz-close" type="button" aria-label="关闭自测">关闭</button>
+  </div>
+  <div class="quiz-setup" id="quiz-setup">
+    <label class="field" for="quiz-duration">
+      <span class="field__label">自测时长 <em>（1–180 分钟）</em></span>
+      <input id="quiz-duration" type="number" min="1" max="180" step="1" value="5">
+    </label>
+    <button class="btn btn--primary" id="quiz-start" type="button">开始自测</button>
+  </div>
+  <div class="quiz-status" id="quiz-status" hidden>
+    <strong id="quiz-timer" aria-live="off">05:00</strong>
+    <span id="quiz-progress" aria-live="polite">尚未作答</span>
+  </div>
+  <div class="quiz-questions" id="quiz-questions" hidden></div>
+  <p class="quiz-result" id="quiz-result" role="status" aria-live="polite" hidden></p>
+  <div class="quiz-dialog__actions">
+    <button class="btn btn--primary" id="quiz-submit" type="button" hidden>提交自测</button>
+    <button class="btn" id="quiz-restart" type="button" hidden>重新开始</button>
+  </div>
+  <section class="quiz-history" aria-labelledby="quiz-history-title">
+    <h3 id="quiz-history-title">最近自测记录</h3>
+    <ol id="quiz-history"></ol>
+  </section>
+</dialog>
 
 <noscript>
   <p style="padding:16px">本页需要启用 JavaScript 才能出题。</p>
@@ -1162,8 +1261,7 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
 </script>
 <script>
 /* 出题工作台界面层 v0.1.0
- * 只负责界面与预留接口；出题逻辑全部在 engine.js（window.FQ_ENGINE）。
- * 打印 / 自测 / 批量三个模块为预留接口，见文件顶部 RESERVED_MODULES 的契约说明。
+ * 出题逻辑位于 engine.js（window.FQ_ENGINE）；自测通过模块接口接入。
  */
 (function () {
   'use strict';
@@ -1171,6 +1269,9 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
   var ENGINE = window.FQ_ENGINE;
 
   var TYPE_LABELS = { arith: '口算填空', mixed: '脱式混合', unknown: '求未知数' };
+  var DEFAULT_QUIZ_DURATION_MINUTES = 5;
+  var MAX_QUIZ_DURATION_MINUTES = 180;
+  var QUIZ_HISTORY_KEY = 'fq.quiz.history.v1';
 
   /* -------------------------------------------------------------------------
    * 预留模块清单
@@ -1192,7 +1293,7 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
       key: 'quiz',
       label: '开始自测',
       hint: '在线作答 / 即时判分 / 倒计时',
-      contract: 'FQ.registerModule("quiz", { run(sheet) {} })'
+      contract: '在线作答 / 即时判分 / 5 分钟倒计时（已接入）'
     },
     {
       key: 'batch',
@@ -1238,6 +1339,205 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
     node.className = 'toast toast--show' + (kind ? ' toast--' + kind : '');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { node.className = 'toast'; }, 4600);
+  }
+
+  /* ------------------------------- 在线自测 ------------------------------- */
+  function formatTime(seconds) {
+    var mins = Math.floor(seconds / 60);
+    var secs = seconds % 60;
+    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  }
+
+  function readQuizHistory() {
+    try {
+      var value = window.localStorage.getItem(QUIZ_HISTORY_KEY);
+      var records = value ? JSON.parse(value) : [];
+      if (!Array.isArray(records)) throw new Error('自测记录格式无效');
+      return records.filter(function (record) {
+        return record && typeof record.date === 'string' &&
+          Number.isInteger(record.correct) && Number.isInteger(record.total) &&
+          record.total > 0 && record.correct >= 0 && record.correct <= record.total;
+      }).slice(0, 10);
+    } catch (err) {
+      console.error('[FQ] 读取自测记录失败：', err);
+      toast('无法读取本机自测记录：' + err.message, 'error');
+      return [];
+    }
+  }
+
+  function renderQuizHistory(records) {
+    el.quizHistory.replaceChildren();
+    if (!records.length) {
+      var empty = document.createElement('li');
+      empty.className = 'quiz-history__empty';
+      empty.textContent = '完成一次自测后，成绩会保存在此浏览器。';
+      el.quizHistory.appendChild(empty);
+      return;
+    }
+    records.forEach(function (record) {
+      var item = document.createElement('li');
+      var date = new Date(record.date);
+      item.textContent = (Number.isNaN(date.getTime()) ? record.date : date.toLocaleString('zh-CN')) +
+        ' · ' + record.correct + '/' + record.total + ' 题正确' +
+        (Number.isInteger(record.durationMinutes) ? ' · ' + record.durationMinutes + ' 分钟' : '');
+      el.quizHistory.appendChild(item);
+    });
+  }
+
+  function renderQuizQuestions(sheet) {
+    el.quizQuestions.replaceChildren();
+    sheet.questions.forEach(function (question, index) {
+      var row = document.createElement('div');
+      row.className = 'quiz-question';
+      var text = document.createElement('span');
+      text.className = 'quiz-question__text';
+      text.textContent = question.index + '. ' + question.display;
+
+      var input = document.createElement('input');
+      input.className = 'quiz-question__answer';
+      input.type = 'text';
+      input.inputMode = 'numeric';
+      input.pattern = '[0-9]*';
+      input.autocomplete = 'off';
+      input.dataset.questionIndex = String(index);
+      input.setAttribute('aria-label', '第 ' + question.index + ' 题答案');
+      input.addEventListener('input', updateQuizProgress);
+
+      var feedback = document.createElement('span');
+      feedback.className = 'quiz-question__feedback';
+      feedback.setAttribute('aria-live', 'polite');
+      row.appendChild(text);
+      row.appendChild(input);
+      row.appendChild(feedback);
+      el.quizQuestions.appendChild(row);
+    });
+    el.quizQuestions.style.setProperty('--cols', String(state.cols));
+  }
+
+  function updateQuizProgress() {
+    if (!state.quiz || state.quiz.finished) return;
+    var inputs = Array.prototype.slice.call(el.quizQuestions.querySelectorAll('.quiz-question__answer'));
+    var answered = 0;
+    inputs.forEach(function (input) {
+      if (input.value.trim()) answered++;
+    });
+    el.quizProgress.textContent = '已填写 ' + answered + '/' + inputs.length + ' 题 · 交卷后统一判分';
+  }
+
+  function finishQuiz() {
+    if (!state.quiz || !state.quiz.started || state.quiz.finished) return;
+    state.quiz.finished = true;
+    clearInterval(state.quiz.timer);
+    var inputs = Array.prototype.slice.call(el.quizQuestions.querySelectorAll('.quiz-question__answer'));
+    var correct = 0;
+    inputs.forEach(function (input) {
+      var question = state.quiz.sheet.questions[Number(input.dataset.questionIndex)];
+      var value = input.value.trim();
+      var isCorrect = /^\d+$/.test(value) && Number(value) === question.answer;
+      var feedback = input.parentNode.querySelector('.quiz-question__feedback');
+      input.disabled = true;
+      input.classList.remove('quiz-question__answer--correct', 'quiz-question__answer--incorrect');
+      feedback.classList.remove('quiz-question__feedback--correct', 'quiz-question__feedback--incorrect');
+      if (isCorrect) {
+        correct++;
+        input.classList.add('quiz-question__answer--correct');
+        feedback.classList.add('quiz-question__feedback--correct');
+        feedback.textContent = '正确';
+      } else {
+        input.classList.add('quiz-question__answer--incorrect');
+        feedback.classList.add('quiz-question__feedback--incorrect');
+        feedback.textContent = '答案：' + question.answer;
+      }
+    });
+
+    var total = inputs.length;
+    var record = {
+      date: new Date().toISOString(),
+      correct: correct,
+      total: total,
+      durationMinutes: state.quiz.durationMinutes
+    };
+    el.quizTimer.textContent = formatTime(state.quiz.remaining);
+    el.quizProgress.textContent = '自测已结束 · 答对 ' + correct + '/' + total + ' 题';
+    el.quizResult.textContent = '本次得分：' + correct + ' / ' + total +
+      '（' + Math.round(correct * 100 / total) + ' 分）' +
+      (state.quiz.remaining === 0 ? ' · 时间到' : '');
+    el.quizResult.hidden = false;
+    el.quizSubmit.hidden = true;
+    el.quizRestart.hidden = false;
+
+    var records = [record].concat(readQuizHistory()).slice(0, 10);
+    renderQuizHistory(records);
+    try {
+      window.localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(records));
+    } catch (err) {
+      console.error('[FQ] 保存自测记录失败：', err);
+      toast('本次成绩已显示，但无法保存到本机：' + err.message, 'error');
+    }
+  }
+
+  function prepareQuiz(sheet) {
+    if (!sheet || !sheet.questions || !sheet.questions.length) {
+      throw new Error('当前没有可用于自测的题目，请先生成题目');
+    }
+    clearInterval(state.quiz && state.quiz.timer);
+    state.quiz = { sheet: sheet, remaining: 0, durationMinutes: null, finished: false, timer: null, started: false };
+    el.quizQuestions.replaceChildren();
+    renderQuizHistory(readQuizHistory());
+    el.quizDuration.value = el.quizDuration.value || String(DEFAULT_QUIZ_DURATION_MINUTES);
+    el.quizSetup.hidden = false;
+    el.quizStatus.hidden = true;
+    el.quizQuestions.hidden = true;
+    el.quizResult.hidden = true;
+    el.quizSubmit.hidden = true;
+    el.quizStart.hidden = false;
+    el.quizRestart.hidden = true;
+    if (!el.quizDialog.open) el.quizDialog.showModal();
+    el.quizDuration.focus();
+  }
+
+  function startQuiz() {
+    if (!state.quiz || state.quiz.started) return;
+    var durationMinutes = Number(el.quizDuration.value);
+    if (!Number.isInteger(durationMinutes) || durationMinutes < 1 ||
+        durationMinutes > MAX_QUIZ_DURATION_MINUTES) {
+      toast('自测时长请输入 1 到 ' + MAX_QUIZ_DURATION_MINUTES + ' 之间的整数分钟', 'warn');
+      el.quizDuration.focus();
+      return;
+    }
+
+    state.quiz.durationMinutes = durationMinutes;
+    state.quiz.remaining = durationMinutes * 60;
+    state.quiz.started = true;
+    renderQuizQuestions(state.quiz.sheet);
+    el.quizSetup.hidden = true;
+    el.quizStatus.hidden = false;
+    el.quizQuestions.hidden = false;
+    el.quizTimer.textContent = formatTime(state.quiz.remaining);
+    el.quizProgress.textContent = '已填写 0/' + state.quiz.sheet.questions.length + ' 题 · 交卷后统一判分';
+    el.quizResult.hidden = true;
+    el.quizSubmit.hidden = false;
+    el.quizStart.hidden = true;
+    el.quizRestart.hidden = true;
+    el.quizQuestions.querySelector('.quiz-question__answer').focus();
+    state.quiz.timer = setInterval(function () {
+      if (!state.quiz || state.quiz.finished) return;
+      state.quiz.remaining--;
+      el.quizTimer.textContent = formatTime(state.quiz.remaining);
+      if (state.quiz.remaining <= 0) finishQuiz();
+    }, 1000);
+  }
+
+  function startQuizWithSheet(sheet) {
+    prepareQuiz(sheet);
+  }
+
+  function restartQuiz() {
+    if (state.quiz) prepareQuiz(state.quiz.sheet);
+  }
+
+  function closeQuiz() {
+    if (el.quizDialog.open) el.quizDialog.close();
   }
 
   /* ------------------------------ 参数读写 ------------------------------ */
@@ -1351,7 +1651,7 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
     emit('sheet:generated', sheet);
   }
 
-  /* --------------------------- 预留模块接口 --------------------------- */
+  /* ----------------------------- 模块接口 ----------------------------- */
   function moduleSpec(key) {
     for (var i = 0; i < RESERVED_MODULES.length; i++) {
       if (RESERVED_MODULES[i].key === key) return RESERVED_MODULES[i];
@@ -1434,6 +1734,27 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
     el.cols.addEventListener('change', function () {
       state.cols = Number(el.cols.value) || 3;
       if (state.sheet) renderPaper(state.sheet);
+      if (state.quiz && !state.quiz.finished) {
+        el.quizQuestions.style.setProperty('--cols', String(state.cols));
+      }
+    });
+
+    el.quizSubmit.addEventListener('click', finishQuiz);
+    el.quizStart.addEventListener('click', startQuiz);
+    el.quizDuration.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') startQuiz();
+    });
+    el.quizClose.addEventListener('click', closeQuiz);
+    el.quizRestart.addEventListener('click', function () {
+      restartQuiz();
+    });
+    el.actions.addEventListener('click', function (e) {
+      var button = e.target.closest('button[data-module]');
+      if (button) runModule(button.dataset.module);
+    });
+    el.quizDialog.addEventListener('close', function () {
+      clearInterval(state.quiz && state.quiz.timer);
+      state.quiz = null;
     });
 
     document.addEventListener('keydown', function (e) {
@@ -1480,14 +1801,28 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
       metrics: $('metrics'),
       paper: $('paper'),
       actions: $('actionbar-buttons'),
+      quizDialog: $('quiz-dialog'),
+      quizSetup: $('quiz-setup'),
+      quizDuration: $('quiz-duration'),
+      quizStart: $('quiz-start'),
+      quizStatus: $('quiz-status'),
+      quizQuestions: $('quiz-questions'),
+      quizTimer: $('quiz-timer'),
+      quizProgress: $('quiz-progress'),
+      quizResult: $('quiz-result'),
+      quizSubmit: $('quiz-submit'),
+      quizClose: $('quiz-close'),
+      quizRestart: $('quiz-restart'),
+      quizHistory: $('quiz-history'),
       actionHint: $('actionbar-hint'),
       toast: $('toast'),
       engineVersion: $('engine-version')
     };
 
     el.engineVersion.textContent = '引擎 v' + ENGINE.VERSION;
-    el.actionHint.textContent = '打印 / 自测 / 批量 三个模块仅预留接口，未实现。';
+    el.actionHint.textContent = '在线自测可自定义时长；成绩保存在当前浏览器。打印与批量生成仍在规划中。';
 
+    state.modules.quiz = { run: startQuizWithSheet };
     applyParamsToControls(ENGINE.DEFAULT_PARAMS);
     buildActionBar();
     bind();
@@ -1497,6 +1832,7 @@ FQ.on("sheet:generated", cb);     // 重新出题时回调</pre>
       '[FQ] 出题工作台 v' + ENGINE.VERSION + '\n' +
       '· FQ.getSheet() 取当前题目（含 params / questions / seed / stats）\n' +
       '· FQ.setParams({ maxValue: 20, types: ["arith"] }) 改参数并重新出题\n' +
+      '· 在线自测已接入「开始自测」模块入口\n' +
       '· FQ.registerModule("print", { run(sheet) { /* 待实现 */ } }) 接入预留模块\n' +
       '· FQ.on("sheet:generated", sheet => {}) 监听重新出题'
     );
